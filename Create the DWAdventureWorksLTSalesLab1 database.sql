@@ -35,7 +35,7 @@ TABLE DimProducts
 , ProductColor nvarchar(50) Not Null 
 , ProductListPrice money Not Null  
 , ProductSize nvarchar(5) Not Null
-, ProductWeight decimal(8,2 ) Not Null
+, ProductWeight decimal(8,2 ) Null 
 , ProductCategoryID int Not Null
 , ProductCategoryName nVarchar(50) Not Null
 );
@@ -105,18 +105,40 @@ go
 --********************************************************************--
 -- Create the ETL Lookup objects
 --********************************************************************--
+--  Create a Null Lookup table
+If (object_id('ETLNullStatuses') is not null) Drop Table ETLNullStatuses;
+go
 CREATE -- Lookup Null Statuses
 TABLE ETLNullStatuses	
 ( NullStatusID int Not Null  
+, NullStatusDateKey date -- date = YYYY-MM-DD between 0001-01-01 through 9999-12-31
 , NullStatusName nvarchar (50)
 , NullStatusDescription nvarchar (1000)
 CONSTRAINT [pkETLNullStatuses]  PRIMARY KEY Clustered (NullStatusID desc)
 );
 go
 
+
+
 --********************************************************************--
 -- Fill Lookup Tables
 --********************************************************************--
+--  Fill Null Lookup Table
+INSERT -- Lookup data
+INTO ETLNullStatuses
+( NullStatusID
+, NullStatusDateKey
+, NullStatusName
+, NullStatusDescription
+) 
+VALUES
+	  (-1,'9999-12-31','Unavaliable', 'Value is currently unknown, but should be available later')
+	, (-2,'0001-01-01','Not Applicable', 'A value is not applicable to this item')
+	, (-3,'0001-01-02','Unknown', 'Value is currently unknown, but may be available later')
+	, (-4,'0001-01-03','Corrupt', 'Original value appeared corrupt or suspicious. As such it was removed from the reporting data')
+	, (-5,'0001-01-04','Not Defined', 'A value could be entered, but the source data has not yet defined it')
+;
+go
 
  -- Fill DimDates Lookup Table
 	-- Step 1: Fill the table with dates data
@@ -169,3 +191,4 @@ Select * From FactSales;
 Select * From DimCustomers;
 Select * From DimProducts;
 Select * From DimDates;
+Select * From  ETLNullStatuses
